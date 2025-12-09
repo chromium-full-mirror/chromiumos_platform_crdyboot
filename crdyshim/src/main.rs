@@ -27,7 +27,7 @@ use libcrdy::tpm::extend_pcr_and_log;
 use libcrdy::uefi::{Uefi, UefiImpl};
 use libcrdy::util::mib_to_bytes;
 use libcrdy::{embed_section, fail_with_fatal_error};
-use log::{error, info};
+use log::info;
 use sbat::{RevocationSbat, RevocationSbatOwned};
 use uefi::boot::{AllocateType, MemoryType};
 use uefi::prelude::*;

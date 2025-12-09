@@ -8,7 +8,7 @@ use alloc::string::{String, ToString};
 use core::ffi::c_void;
 use core::ops::Range;
 use core::{mem, ptr, str};
-use log::{error, info};
+use log::info;
 use uguid::Guid;
 
 /// Errors produced by `load_kernel`.
