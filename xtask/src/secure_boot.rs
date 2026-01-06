@@ -46,8 +46,8 @@ impl SecureBootKeyPaths {
         self.dir.join("key.db.var")
     }
 
-    pub fn priv_ed25519_pem(&self) -> Utf8PathBuf {
-        self.dir.join("key_ed25519.priv.pem")
+    pub fn priv_ecdsa_pem(&self) -> Utf8PathBuf {
+        self.dir.join("key_ecdsa.priv.pem")
     }
 }
 
@@ -73,12 +73,12 @@ pub fn generate_rsa_key(paths: &SecureBootKeyPaths, name: &str) -> Result<()> {
     convert_pem_to_der(&paths.pub_pem(), &paths.pub_der())
 }
 
-/// Set up the Ed25519 key used for signing the second-stage bootloader
+/// Set up the ECDSA key used for signing the second-stage bootloader
 /// so that crdyshim can verify it.
 ///
 /// This uses the test key from the vboot repo rather than generating a
 /// new one.
-pub fn prepare_ed25519_key(conf: &Config) -> Result<()> {
+pub fn prepare_ecdsa_key(conf: &Config) -> Result<()> {
     let paths = conf.secure_boot_shim_key_paths();
 
     paths.create_dir()?;
@@ -86,8 +86,8 @@ pub fn prepare_ed25519_key(conf: &Config) -> Result<()> {
 
     // Copy the private key.
     fs::copy(
-        devkeys_dir.join("uefi/crdyshim.priv.pem"),
-        paths.priv_ed25519_pem(),
+        devkeys_dir.join("uefi/crdyshim-v2.priv.pem"),
+        paths.priv_ecdsa_pem(),
     )?;
 
     Ok(())
@@ -163,20 +163,31 @@ pub fn authenticode_sign(
     Ok(())
 }
 
-/// Created a detached Ed25519 signature of `src`. The signature is
+/// Created a detached ECDSA signature of `src`. The signature is
 /// written to `dst`.
 pub fn create_detached_signature(
     src: &Utf8Path,
     dst: &Utf8Path,
     key_paths: &SecureBootKeyPaths,
 ) -> Result<()> {
-    // Args based on https://cendyne.dev/posts/2022-03-06-ed25519-signatures.html
+    let sha256_path = dst.with_extension("sha256");
+
+    // Calculate the hash and write to a binary file. This could be
+    // skipped by passing `-rawin` to the `pkeyutl` command below, but
+    // doing it this way more closely matches the signing code in
+    // vboot_reference.
+    #[rustfmt::skip]
+    Command::with_args("openssl", [
+        "dgst", "-sha256", "-binary",
+        "-out", sha256_path.as_str(),
+        src.as_str(),
+    ]).run()?;
+
     #[rustfmt::skip]
     Command::with_args("openssl", [
         "pkeyutl", "-sign",
-        "-rawin",
-        "-in", src.as_str(),
-        "-inkey", key_paths.priv_ed25519_pem().as_str(),
+        "-in", sha256_path.as_str(),
+        "-inkey", key_paths.priv_ecdsa_pem().as_str(),
         "-out", dst.as_str(),
     ]).run()?;
 

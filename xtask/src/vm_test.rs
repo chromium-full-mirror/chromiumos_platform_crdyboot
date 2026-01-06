@@ -392,7 +392,7 @@ fn test_invalid_signature_prevents_crdyboot_launch(conf: &Config) -> Result<()> 
 
     corrupt_crdyboot_signatures(&conf.test_disk_path())?;
 
-    let expected_output = &["Boot error in crdyshim-.*: signature verification failed"];
+    let expected_output = &["Boot error in crdyshim-.*: signature file is malformed"];
     launch_test_disk_and_expect_output(conf, default_qemu_opts(conf), expected_output)
 }
 
