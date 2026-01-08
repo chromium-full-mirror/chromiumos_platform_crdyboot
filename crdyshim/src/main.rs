@@ -341,6 +341,31 @@ fn read_signature(
     }
 }
 
+// Read the signature file of the next stage and use it to verify that
+// the next stage executable was signed by the expected key.
+//
+// Returns `Ok(())` if and only if verification is successful.
+fn validate_next_stage(
+    crdyshim: &dyn Crdyshim,
+    file_loader: &mut dyn FileLoader,
+    exe_path: &CStr16,
+    raw_exe: &[u8],
+) -> Result<(), CrdyshimError> {
+    let public_key = crdyshim.get_public_key();
+    info!("embedded public key: {:02x?}", public_key.as_slice());
+
+    // Read the next stage signature.
+    let raw_signature: [u8; ed25519_compact::Signature::BYTES] =
+        read_signature(&mut *file_loader, exe_path)?;
+    let signature = ed25519_compact::Signature::new(raw_signature);
+    info!("next-stage signature: {:02x?}", signature.as_slice());
+
+    // Verify the executable's signature.
+    public_key
+        .verify(raw_exe, &signature)
+        .map_err(|_| CrdyshimError::SignatureVerificationFailed)
+}
+
 fn load_and_validate_next_stage(
     crdyshim: &dyn Crdyshim,
     next_stage_name: &CStr16,
@@ -367,45 +392,16 @@ fn load_and_validate_next_stage(
     // returns is less than or equal to the buffer length.
     let raw_exe = raw_exe_alloc.get(..exe_size).unwrap();
 
-    // Read the next stage signature.
-    let raw_signature: [u8; ed25519_compact::Signature::BYTES] =
-        match read_signature(&mut *file_loader, &exe_path) {
-            Ok(raw_signature) => raw_signature,
-            Err(err) => {
-                if is_secure_boot_enabled {
-                    // If secure boot is enabled, a missing signature file is a
-                    // fatal error.
-                    return Err(err);
-                }
-
-                // If secure boot is not enabled, signature verification is
-                // allowed to fail, so allow the signature file to be
-                // missing entirely. Initialize an arbitrary signature value
-                // here.
-                info!("secure boot is not enabled, allow missing signature file");
-                [0xff; ed25519_compact::Signature::BYTES]
-            }
-        };
-
-    let public_key = crdyshim.get_public_key();
-    info!("embedded public key: {:02x?}", public_key.as_slice());
-
-    // Verify the executable's signature.
-    let signature = ed25519_compact::Signature::new(raw_signature);
-    info!("next-stage signature: {:02x?}", signature.as_slice());
-    // TODO(nicholasbishop): clippy is incorrectly warning here. Drop
-    // this after the next Rust upgrade.
-    #[expect(clippy::needless_borrows_for_generic_args)]
-    let verified = public_key.verify(&raw_exe, &signature).is_ok();
-
-    info!("signature verified? {}", verified);
-
-    if !verified {
+    // Validate the signature of the next stage. This is allowed to fail
+    // if secure boot is off.
+    if let Err(err) = validate_next_stage(crdyshim, &mut *file_loader, &exe_path, raw_exe) {
         if is_secure_boot_enabled {
-            return Err(CrdyshimError::SignatureVerificationFailed);
+            return Err(err);
         }
 
-        info!("secure boot is not enabled, allowing failed verification");
+        info!("secure boot is not enabled, allowing signature error: {err}");
+    } else {
+        info!("signature successfully verified");
     }
 
     // Measure the raw executable into the TPM.
@@ -867,6 +863,7 @@ mod tests {
         expect_allocate_pages(&mut crdyshim);
         expect_is_secure_boot_enabled(&mut crdyshim, true);
         expect_boot_file_loader(&mut crdyshim, invalid_signature);
+        expect_get_public_key(&mut crdyshim);
 
         assert_eq!(run(&crdyshim), Err(CrdyshimError::InvalidSignatureSize(0)));
     }
