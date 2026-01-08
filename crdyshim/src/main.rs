@@ -320,27 +320,6 @@ fn get_executable_path(name: &CStr16, arch: Arch) -> CString16 {
     path
 }
 
-/// Read and return the raw signature data. Valid signature data has
-/// a fixed size of 64 bytes; an error will be returned if the file
-/// has the wrong length.
-fn read_signature(
-    file_loader: &mut dyn FileLoader,
-    exe_path: &CStr16,
-) -> Result<[u8; ed25519_compact::Signature::BYTES], CrdyshimError> {
-    let signature_path = fs::replace_final_extension(exe_path, cstr16!("sig"))
-        .ok_or(CrdyshimError::InvalidSignatureName)?;
-
-    let mut signature = [0; ed25519_compact::Signature::BYTES];
-    let read_size = file_loader
-        .read_file_into(&signature_path, &mut signature)
-        .map_err(CrdyshimError::SignatureReadFailed)?;
-    if read_size == signature.len() {
-        Ok(signature)
-    } else {
-        Err(CrdyshimError::InvalidSignatureSize(read_size))
-    }
-}
-
 // Read the signature file of the next stage and use it to verify that
 // the next stage executable was signed by the expected key.
 //
@@ -355,8 +334,15 @@ fn validate_next_stage(
     info!("embedded public key: {:02x?}", public_key.as_slice());
 
     // Read the next stage signature.
-    let raw_signature: [u8; ed25519_compact::Signature::BYTES] =
-        read_signature(&mut *file_loader, exe_path)?;
+    let signature_path = fs::replace_final_extension(exe_path, cstr16!("sig"))
+        .ok_or(CrdyshimError::InvalidSignatureName)?;
+    let mut raw_signature = [0; ed25519_compact::Signature::BYTES];
+    let read_size = file_loader
+        .read_file_into(&signature_path, &mut raw_signature)
+        .map_err(CrdyshimError::SignatureReadFailed)?;
+    if read_size != raw_signature.len() {
+        return Err(CrdyshimError::InvalidSignatureSize(read_size));
+    }
     let signature = ed25519_compact::Signature::new(raw_signature);
     info!("next-stage signature: {:02x?}", signature.as_slice());
 
