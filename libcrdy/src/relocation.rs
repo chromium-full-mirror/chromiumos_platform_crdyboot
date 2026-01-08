@@ -29,7 +29,7 @@ use object::read::pe::{
 };
 use object::LittleEndian;
 
-#[derive(Clone, Copy, Debug, thiserror::Error)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum RelocationError {
     /// The image base caused overflow.
     #[error("invalid image base: {0}")]

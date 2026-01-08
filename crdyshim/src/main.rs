@@ -54,7 +54,7 @@ const PCR_INDEX: PcrIndex = PcrIndex(4);
 /// next stage actually needs.
 const NEXT_STAGE_ALLOCATION_SIZE_IN_BYTES: usize = mib_to_bytes(2);
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum CrdyshimError {
     /// Failed to get the revocation data.
     #[error("revocation data error")]
@@ -812,12 +812,12 @@ mod tests {
             Err(RevocationError::UndatedEmbeddedRevocations),
         );
 
-        assert!(matches!(
+        assert_eq!(
             run(&crdyshim),
             Err(CrdyshimError::RevocationDataError(
                 RevocationError::UndatedEmbeddedRevocations
             ))
-        ));
+        );
     }
 
     /// Test that boot fails if the self-revocation check fails.
@@ -828,10 +828,10 @@ mod tests {
         expect_update_and_get_revocations(&mut crdyshim, Ok(get_test_revocations()));
         expect_self_revocation_check(&mut crdyshim, Err(RevocationError::Revoked));
 
-        assert!(matches!(
+        assert_eq!(
             run(&crdyshim),
             Err(CrdyshimError::SelfRevoked(RevocationError::Revoked))
-        ));
+        );
     }
 
     /// Test that signature verification fails with an incorrect signature.
@@ -848,10 +848,10 @@ mod tests {
         expect_boot_file_loader(&mut crdyshim, incorrect_signature);
         expect_get_public_key(&mut crdyshim);
 
-        assert!(matches!(
+        assert_eq!(
             run(&crdyshim),
             Err(CrdyshimError::SignatureVerificationFailed)
-        ));
+        );
     }
 
     /// Test that signature verification fails with a malformed
@@ -868,10 +868,7 @@ mod tests {
         expect_is_secure_boot_enabled(&mut crdyshim, true);
         expect_boot_file_loader(&mut crdyshim, invalid_signature);
 
-        assert!(matches!(
-            run(&crdyshim),
-            Err(CrdyshimError::InvalidSignatureSize(0))
-        ));
+        assert_eq!(run(&crdyshim), Err(CrdyshimError::InvalidSignatureSize(0)));
     }
 
     /// Test that boot fails if the next stage has been revoked.
@@ -889,10 +886,10 @@ mod tests {
         expect_extend_pcr_and_log(&mut crdyshim);
         expect_next_stage_revocation_check(&mut crdyshim, Err(RevocationError::Revoked));
 
-        assert!(matches!(
+        assert_eq!(
             run(&crdyshim),
             Err(CrdyshimError::NextStageRevoked(RevocationError::Revoked))
-        ));
+        );
     }
 
     /// Test that the whole boot flow succeeds if the signature is

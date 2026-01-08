@@ -11,7 +11,7 @@ use uefi::proto::media::file::{File, FileAttribute, FileMode};
 use uefi::proto::media::fs::SimpleFileSystem;
 use uefi::{CStr16, Status};
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum FsError {
     /// Failed to open the [`SimpleFileSystem`] protocol for the
     /// partition that the curent executable was booted from.
