@@ -405,6 +405,9 @@ fn run_bootloader_build(
     run_uefi_build(Package::Crdyboot, crdyboot_features)?;
     run_uefi_build(Package::UefiTestTool, vec![])?;
 
+    // Check the dev and official public keys used by crdyshim.
+    secure_boot::check_crdyshim_public_keys(conf)?;
+
     // Check various properties of the bootloader binaries.
     bin_checks::run_bin_checks(conf)?;
 

@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use crate::Config;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use command_run::Command;
 use fs_err as fs;
@@ -255,6 +255,50 @@ pub fn update_sbat_revocations() -> Result<()> {
     fs::write(output_path, csv)?;
     println!("revocations written to {output_path}");
 
+    Ok(())
+}
+
+/// Check the dev and official public keys used by crdyshim to make sure
+/// they match the PEM files.
+pub fn check_crdyshim_public_keys(conf: &Config) -> Result<()> {
+    /// Check that the SEC-1 encoded public key at `sec1_path` matches
+    /// the PEM-encoded public key in `pem`.
+    fn check_public_key(pem: &str, sec1_path: &Utf8Path) -> Result<()> {
+        // Strip off metadata after the public key so that it can be parsed.
+        let marker = "-----END PUBLIC KEY-----";
+        let index = pem.find(marker).context("missing end public key marker")?;
+        let pem = &pem[..index + marker.len()];
+
+        // Parse the PEM and convert to SEC1.
+        let dev_key: p256::ecdsa::VerifyingKey =
+            pem.parse().map_err(|_| anyhow!("invalid PEM file"))?;
+        let expected_sec1 = dev_key.to_sec1_bytes();
+
+        // Verify the SEC1 file has the correct contents.
+        let actual_sec1 = fs::read(sec1_path)?;
+        if *actual_sec1 != *expected_sec1 {
+            // Write the expected contents to a temporary file to make
+            // it easier to examine.
+            let expected_path = Utf8Path::new("/tmp").join(sec1_path.file_name().unwrap());
+            fs::write(&expected_path, expected_sec1)?;
+
+            bail!(
+                "crdyshim dev key at {} is incorrect: expected contents written to {}",
+                sec1_path,
+                expected_path,
+            );
+        }
+        Ok(())
+    }
+
+    check_public_key(
+        &fs::read_to_string(conf.vboot_devkeys_path().join("uefi/crdyshim-v2.pub.pem"))?,
+        Utf8Path::new("crdyshim/src/pubkey_dev.sec1"),
+    )?;
+
+    // TODO(nicholasbishop): check official key too, once we have it.
+
+    println!("all pubkey checks passed");
     Ok(())
 }
 
