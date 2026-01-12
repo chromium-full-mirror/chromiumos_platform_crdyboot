@@ -90,9 +90,9 @@ pub enum CrdyshimError {
     )]
     SignatureReadFailed(#[source] FsError),
 
-    /// The next stage signature file has the wrong size.
-    #[error("signature file has incorrect size: {0}")]
-    InvalidSignatureSize(usize),
+    /// The signature is not a valid Ed25519 signature.
+    #[error("signature file is malformed")]
+    MalformedSignature,
 
     /// The next stage did not pass signature validation.
     #[error("signature verification failed")]
@@ -341,7 +341,7 @@ fn validate_next_stage(
         .read_file_into(&signature_path, &mut raw_signature)
         .map_err(CrdyshimError::SignatureReadFailed)?;
     if read_size != raw_signature.len() {
-        return Err(CrdyshimError::InvalidSignatureSize(read_size));
+        return Err(CrdyshimError::MalformedSignature);
     }
     let signature = ed25519_compact::Signature::new(raw_signature);
     info!("next-stage signature: {:02x?}", signature.as_slice());
@@ -852,7 +852,7 @@ mod tests {
     /// signature.
     #[test]
     #[cfg_attr(miri, ignore)]
-    fn test_signature_too_short_error_with_secure_boot() {
+    fn test_signature_malformed_error_with_secure_boot() {
         let invalid_signature = &[];
         let mut crdyshim = MockCrdyshim::new();
 
@@ -863,7 +863,7 @@ mod tests {
         expect_boot_file_loader(&mut crdyshim, invalid_signature);
         expect_get_public_key(&mut crdyshim);
 
-        assert_eq!(run(&crdyshim), Err(CrdyshimError::InvalidSignatureSize(0)));
+        assert_eq!(run(&crdyshim), Err(CrdyshimError::MalformedSignature));
     }
 
     /// Test that boot fails if the next stage has been revoked.
