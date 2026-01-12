@@ -613,6 +613,19 @@ mod tests {
         0x20, 0x82, 0x72, 0x00,
     ];
 
+    /// Ed25519 signature for data that _isn't_ `TEST_EXE`.
+    ///
+    /// This is a valid signature created using the dev crdyshim private
+    /// key. See `TEST_EXE_SIGNATURE` for how it was generated; the only
+    /// difference is the input file.
+    const TEST_OTHER_SIGNATURE: &[u8] = &[
+        0xb5, 0x4b, 0x7f, 0xfd, 0x9c, 0x49, 0x94, 0xa3, 0xbf, 0xe6, 0xfd, 0x6b, 0xde, 0xfd, 0x95,
+        0x86, 0xd0, 0x22, 0xf5, 0xfb, 0x19, 0xd2, 0x42, 0xb0, 0xfb, 0x33, 0xc6, 0x00, 0x30, 0xf4,
+        0x6d, 0x01, 0x2b, 0x76, 0x1c, 0xf4, 0x77, 0xb3, 0xcd, 0x89, 0xa0, 0x8d, 0xc0, 0xe0, 0x17,
+        0x42, 0x30, 0x02, 0x46, 0x2c, 0x0a, 0xd1, 0x7f, 0xec, 0x29, 0xf0, 0x36, 0x9e, 0x94, 0x08,
+        0x1d, 0xcd, 0x0a, 0x07,
+    ];
+
     fn get_test_revocations() -> RevocationSbatOwned {
         let revocations = b"sbat,1,2023012900\nshim,2\ngrub,3\ngrub.debian,4";
         RevocationSbatOwned::parse(revocations).unwrap()
@@ -820,14 +833,13 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)]
     fn test_signature_verification_error_with_secure_boot() {
-        let incorrect_signature = &[0; 64];
         let mut crdyshim = MockCrdyshim::new();
 
         expect_update_and_get_revocations(&mut crdyshim, Ok(get_test_revocations()));
         expect_self_revocation_check(&mut crdyshim, Ok(()));
         expect_allocate_pages(&mut crdyshim);
         expect_is_secure_boot_enabled(&mut crdyshim, true);
-        expect_boot_file_loader(&mut crdyshim, incorrect_signature);
+        expect_boot_file_loader(&mut crdyshim, TEST_OTHER_SIGNATURE);
         expect_get_public_key(&mut crdyshim);
 
         assert_eq!(
@@ -880,14 +892,13 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)]
     fn test_incorrect_signature_without_secure_boot() {
-        let incorrect_signature = &[0; 64];
         let mut crdyshim = MockCrdyshim::new();
 
         expect_update_and_get_revocations(&mut crdyshim, Ok(get_test_revocations()));
         expect_self_revocation_check(&mut crdyshim, Ok(()));
         expect_allocate_pages(&mut crdyshim);
         expect_is_secure_boot_enabled(&mut crdyshim, false);
-        expect_boot_file_loader(&mut crdyshim, incorrect_signature);
+        expect_boot_file_loader(&mut crdyshim, TEST_OTHER_SIGNATURE);
         expect_get_public_key(&mut crdyshim);
         expect_extend_pcr_and_log(&mut crdyshim);
         expect_next_stage_revocation_check(&mut crdyshim, Ok(()));
