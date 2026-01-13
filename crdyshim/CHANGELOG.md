@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+* Print verbose logs after a fatal error. <http://crrev.com/c/6204144>
+* Log version on startup. <http://crrev.com/c/6696590>
 * Make TPM logs more detailed. <http://crrev.com/c/5440295>
-* Update to uefi-0.28 and drop uefi-services. <https://crrev.com/c/5582506>
+* Update to uefi-0.34. <http://crrev.com/c/5582506>,
+  <http://crrev.com/c/5808421>, <http://crrev.com/c/5898543>,
+  <http://crrev.com/c/6022537>, <http://crrev.com/c/6420861>
 * Simplify file path code. <http://crrev.com/c/5582482>
 
 ## 1.0.1
