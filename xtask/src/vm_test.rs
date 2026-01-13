@@ -502,18 +502,18 @@ fn test_fatal_error_logs(conf: &Config) -> Result<()> {
 fn test_invalid_flexor_kernel(conf: &Config) -> Result<()> {
     println!("test that flexor boot rejects kernels not in the allow list");
 
-    let opts = QemuOpts {
-        image_path: conf.flexor_disk_path(),
-        timeout: None,
-        network: true,
-        ..default_qemu_opts(conf)
-    };
-    // update flexor disk image with a test kernel.
+    // Update flexor disk image with a test kernel.
     update_flexor_disk_with_test_kernel(conf.disk_path(), &conf.flexor_disk_path())?;
-    let expected_output = &["Boot error in crdyboot-.*: failed to load the flexor kernel"];
 
-    launch_test_disk_and_expect_output(conf, opts, expected_output)?;
-    Ok(())
+    let expected_output = &["Boot error in crdyboot-.*: failed to load the flexor kernel"];
+    launch_test_disk_and_expect_output(
+        conf,
+        QemuOpts {
+            image_path: conf.flexor_disk_path(),
+            ..default_qemu_opts(conf)
+        },
+        expected_output,
+    )
 }
 
 pub fn run_vm_tests(conf: &Config) -> Result<()> {
