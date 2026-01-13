@@ -385,7 +385,7 @@ fn load_and_validate_next_stage(
             return Err(err);
         }
 
-        info!("secure boot is not enabled, allowing signature error: {err}");
+        info!("secure boot is not enabled, allowing signature error: {err:?}");
     } else {
         info!("signature successfully verified");
     }

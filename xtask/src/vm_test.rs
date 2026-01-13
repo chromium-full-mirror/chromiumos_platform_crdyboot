@@ -516,6 +516,31 @@ fn test_invalid_flexor_kernel(conf: &Config) -> Result<()> {
     )
 }
 
+/// Test that a missing signature file does not prevent successful boot
+/// if secure boot is off.
+///
+/// This is the normal case for developers working with an unsigned test
+/// image.
+fn test_missing_signature_sb_off_success(conf: &Config) -> Result<()> {
+    println!(
+        "test that boot is successful if the crdyboot signature is missing and secure boot is off"
+    );
+
+    delete_crdyboot_signatures(&conf.test_disk_path())?;
+
+    let expected_output = "secure boot is not enabled, allowing signature error: ".to_owned()
+        + r"SignatureReadFailed\(OpenFailed\(NOT_FOUND\)\)";
+    launch_test_disk_and_expect_output(
+        conf,
+        QemuOpts {
+            secure_boot: false,
+            ..default_qemu_opts(conf)
+        },
+        &[&expected_output],
+    )?;
+    Ok(())
+}
+
 pub fn run_vm_tests(conf: &Config) -> Result<()> {
     run_bootloader_build(conf, BuildAndroid(false), VerboseRuntimeLogs(true))?;
     download_test_key(conf)?;
@@ -523,6 +548,7 @@ pub fn run_vm_tests(conf: &Config) -> Result<()> {
     create_test_disk(conf)?;
 
     let tests = [
+        test_missing_signature_sb_off_success,
         test_invalid_flexor_kernel,
         test_fatal_error_logs,
         test_no_verbose_logs,
