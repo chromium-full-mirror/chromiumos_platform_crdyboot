@@ -208,6 +208,12 @@ impl Crdyshim for CrdyshimImpl {
         #[cfg(not(feature = "use_dev_pubkey"))]
         const PUBLIC_KEY_SEC1: &[u8] = include_bytes!("pubkey_official.sec1");
 
+        #[cfg(feature = "use_dev_pubkey")]
+        info!("embedded public key (dev): {:02x?}", PUBLIC_KEY_SEC1);
+
+        #[cfg(not(feature = "use_dev_pubkey"))]
+        info!("embedded public key (official): {:02x?}", PUBLIC_KEY_SEC1);
+
         // Parse the SEC1 key data as an ECDSA public key.
         //
         // OK to unwrap: the key data is hardcoded at build time.
@@ -326,7 +332,6 @@ fn validate_next_stage(
     raw_exe: &[u8],
 ) -> Result<(), CrdyshimError> {
     let public_key = crdyshim.get_public_key();
-    info!("embedded public key: {:02x?}", public_key);
 
     // Read the next stage signature.
     let signature_path = fs::replace_final_extension(exe_path, cstr16!("sig"))
@@ -340,9 +345,9 @@ fn validate_next_stage(
     // OK to unwrap: `read_file_into` would return an error if the file
     // size was bigger than the input buffer.
     let raw_signature = &raw_signature.get(..read_size).unwrap();
+    info!("next-stage signature: {:02x?}", raw_signature);
     let signature = p256::ecdsa::Signature::from_der(raw_signature)
         .map_err(|_| CrdyshimError::MalformedSignature)?;
-    info!("next-stage signature: {:02x?}", signature);
 
     // Verify the executable's signature.
     public_key
