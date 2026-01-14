@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Switch signature verification from Ed25519 to ECDSA.
+  <http://crrev.com/c/7474111>, <http://crrev.com/c/7416135>,
+  <http://crrev.com/c/7416136>
 * Print verbose logs after a fatal error. <http://crrev.com/c/6204144>
 * Log version on startup. <http://crrev.com/c/6696590>
 * Make TPM logs more detailed. <http://crrev.com/c/5440295>
