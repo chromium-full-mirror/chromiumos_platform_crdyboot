@@ -291,12 +291,31 @@ pub fn check_crdyshim_public_keys(conf: &Config) -> Result<()> {
         Ok(())
     }
 
+    // Official ECDSA public key from
+    // keyset/public/RevenMPKeys-v10/uefi/crdyshim-v2.pub.pem
+    let official_public_key = "
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIRSKY61W52tNPbNFZVcxgRkoSKz6
+04tHxsA35BVLVsiZvwbyKfQfMNLW/tcQlUwdUuTYxBXkjFqu9X66iDemIQ==
+-----END PUBLIC KEY-----
+Public-Key: (256 bit)
+pub:
+    04:21:14:8a:63:ad:56:e7:6b:4d:3d:b3:45:65:57:
+    31:81:19:28:48:ac:fa:d3:8b:47:c6:c0:37:e4:15:
+    4b:56:c8:99:bf:06:f2:29:f4:1f:30:d2:d6:fe:d7:
+    10:95:4c:1d:52:e4:d8:c4:15:e4:8c:5a:ae:f5:7e:
+    ba:88:37:a6:21
+ASN1 OID: prime256v1
+NIST CURVE: P-256
+";
+    check_public_key(
+        official_public_key,
+        Utf8Path::new("crdyshim/src/pubkey_official.sec1"),
+    )?;
     check_public_key(
         &fs::read_to_string(conf.vboot_devkeys_path().join("uefi/crdyshim-v2.pub.pem"))?,
         Utf8Path::new("crdyshim/src/pubkey_dev.sec1"),
     )?;
-
-    // TODO(nicholasbishop): check official key too, once we have it.
 
     println!("all pubkey checks passed");
     Ok(())
