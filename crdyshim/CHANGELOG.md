@@ -1,6 +1,6 @@
 # Crdyshim Changelog
 
-## Unreleased
+## 1.0.2
 
 * Switch signature verification from Ed25519 to ECDSA.
   <http://crrev.com/c/7474111>, <http://crrev.com/c/7416135>,
