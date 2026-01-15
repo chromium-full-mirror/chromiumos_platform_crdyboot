@@ -5,6 +5,7 @@
 * Switch signature verification from Ed25519 to ECDSA.
   <http://crrev.com/c/7474111>, <http://crrev.com/c/7416135>,
   <http://crrev.com/c/7416136>
+* Update SBAT revocations to 20250510. <http://crrev.com/c/7487010>
 * Print verbose logs after a fatal error. <http://crrev.com/c/6204144>
 * Log version on startup. <http://crrev.com/c/6696590>
 * Make TPM logs more detailed. <http://crrev.com/c/5440295>
