@@ -45,7 +45,7 @@ packages:
   loads, verifies, and runs the kernel.
 * The `crdyshim` package produces an optional first-stage bootloader
   similar to [`shim`]. Its purpose is to load, verify, and run the
-  second stage bootloader.
+  second stage bootloader. See [docs/crdyshim.md] for more details.
 * The `xtask` package contains a host executable that provides the
   various `xtask` commands shown below. It's like a fancy Makefile for
   running various dev and test operations.
@@ -117,6 +117,7 @@ See the [docs](docs) subdirectory.
 
 [BSD]: LICENSE
 [EFI stub]: https://docs.kernel.org/admin-guide/efi-stub.html
+[docs/crdyshim.md]: docs/crdyshim.md
 [go/crdyboot-internal]: http://go/crdyboot-internal
 [kernel partition]: https://chromium.googlesource.com/chromiumos/docs/+/HEAD/disk_format.md#Kernel-partition-format
 [`shim`]: https://github.com/rhboot/shim

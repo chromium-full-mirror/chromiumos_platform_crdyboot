@@ -14,6 +14,28 @@ This bootloader is in the same repo as crdyboot so that they can share
 code and tests, but they are not inherently tied together other than
 crdyshim hardcoding the filename of crdyboot.
 
+## Boot flow
+
+1. Get current SBAT revocations from the `SbatLevel` UEFI variable.
+2. Optionally update the `SbatLevel`, if the embedded SBAT revocation
+   data is newer.
+3. Check the current executable's `.sbat` section against the current
+   SBAT revocations; if crdyshim has been revoked, stop boot.
+4. Load the next-stage executable from `<esp>/efi/boot/crdyboot<arch>.efi`.
+5. Load the next-stage signature from `<esp>/efi/boot/crdyboot<arch>.sig`.
+6. Use an embedded ECDSA public key and the signature to verify that the
+   next-stage executable was signed by the expected key. Signature
+   verification uses the [`p256`] crate.
+7. If the signature is invalid, and secure boot is enabled, stop
+   boot. If secure boot is not enabled, boot is allowed to continue with
+   an invalid signature.
+8. The executable data is measured into TPM PCR 4.
+9. Check the next-stage executable's `.sbat` section against the current
+   SBAT revocations; if it has been revoked, stop boot.
+10. Apply relocations for the next-stage executable.
+11. Apply NX memory attributes to the next-stage executable.
+12. Launch the next-stage executable.
+
 ## Features
 
 * Well documented and as simple as possible.
@@ -21,4 +43,5 @@ crdyshim hardcoding the filename of crdyboot.
   use crdyshim. This includes 32-bit UEFI environments.
 * 100% Rust.
 
+[`p256`]: https://docs.rs/p256/latest/p256/index.html
 [`shim`]: https://github.com/rhboot/shim
