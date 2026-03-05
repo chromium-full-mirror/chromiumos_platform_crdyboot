@@ -1,3 +1,7 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 // This file was generated with `cargo xtask gen-vboot-return-code-strings`.
 // Rerun that command to modify this file, do not edit it manually.
 
@@ -5,7 +9,7 @@ use crate::ReturnCode;
 
 /// Stringify a [`ReturnCode`].
 #[must_use]
-#[allow(clippy::pedantic)]
+#[expect(clippy::pedantic)]
 #[rustfmt::skip]
 pub fn return_code_to_str(rc: ReturnCode) -> &'static str {
     match rc {
@@ -173,7 +177,9 @@ pub fn return_code_to_str(rc: ReturnCode) -> &'static str {
         ReturnCode::VB2_ERROR_KERNEL_PREAMBLE2_WORKBUF => "VB2_ERROR_KERNEL_PREAMBLE2_WORKBUF",
         ReturnCode::VB2_ERROR_KERNEL_PREAMBLE_VERSION_RANGE => "VB2_ERROR_KERNEL_PREAMBLE_VERSION_RANGE",
         ReturnCode::VB2_ERROR_KERNEL_PREAMBLE_VERSION_ROLLBACK => "VB2_ERROR_KERNEL_PREAMBLE_VERSION_ROLLBACK",
-        ReturnCode::VB2_ERROR_API_GET_KERNEL_SIZE_PREAMBLE => "VB2_ERROR_API_GET_KERNEL_SIZE_PREAMBLE",
+        ReturnCode::VB2_ERROR_DEPRECATED_API_GET_KERNEL_SIZE_PREAMBLE => {
+            "VB2_ERROR_DEPRECATED_API_GET_KERNEL_SIZE_PREAMBLE"
+        },
         ReturnCode::VB2_ERROR_DEPRECATED_VBLOCK_KERNEL_SUBKEY => "VB2_ERROR_DEPRECATED_VBLOCK_KERNEL_SUBKEY",
         ReturnCode::VB2_ERROR_DEPRECATED_VBLOCK_SELF_SIGNED => "VB2_ERROR_DEPRECATED_VBLOCK_SELF_SIGNED",
         ReturnCode::VB2_ERROR_DEPRECATED_VBLOCK_KEYBLOCK_HASH => "VB2_ERROR_DEPRECATED_VBLOCK_KEYBLOCK_HASH",
