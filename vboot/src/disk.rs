@@ -89,7 +89,6 @@ impl<'a> Disk<'a> {
                 handle: self.as_handle(),
                 bytes_per_lba: self.io.bytes_per_lba().get(),
                 lba_count: self.io.lba_count(),
-                streaming_lba_count: 0,
                 name: ptr::null(),
             },
             phantom: PhantomData,
