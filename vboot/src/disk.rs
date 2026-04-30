@@ -90,7 +90,6 @@ impl<'a> Disk<'a> {
                 bytes_per_lba: self.io.bytes_per_lba().get(),
                 lba_count: self.io.lba_count(),
                 streaming_lba_count: 0,
-                flags: 0,
                 name: ptr::null(),
             },
             phantom: PhantomData,
