@@ -141,7 +141,14 @@ unsafe extern "C" fn avb_printf(fmt: *const c_char, mut args: ...) {
     // Used when AVB_USE_PRINTF_LOGS is defined.
     // AVB_USE_PRINTF_LOGS is defined in build.rs.
     let mut full = String::new();
-    printf::format(fmt, args.as_va_list(), printf::output::fmt_write(&mut full));
+    // b/522737164: Need compat here with Rust <1.94 and >=1.94. Clean this up after 1.94 lands in
+    // CrOS.
+    #[cfg(cros_va_list_2_lifetimes)]
+    let va_list = args.as_va_list();
+    #[cfg(not(cros_va_list_2_lifetimes))]
+    let va_list = args;
+
+    printf::format(fmt, va_list, printf::output::fmt_write(&mut full));
     let output = full.strip_suffix('\n').unwrap_or(&full);
 
     #[cfg(test)]

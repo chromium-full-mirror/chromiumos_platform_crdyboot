@@ -36,11 +36,14 @@ unsafe extern "C" fn vb2ex_printf(func: *const c_char, fmt: *const c_char, mut a
     let func = str_from_c_str(func);
 
     let mut output = String::new();
-    printf::format(
-        fmt,
-        args.as_va_list(),
-        printf::output::fmt_write(&mut output),
-    );
+    // b/522737164: Need compat here with Rust <1.94 and >=1.94. Clean this up after 1.94 lands in
+    // CrOS.
+    #[cfg(cros_va_list_2_lifetimes)]
+    let va_list = args.as_va_list();
+    #[cfg(not(cros_va_list_2_lifetimes))]
+    let va_list = args;
+
+    printf::format(fmt, va_list, printf::output::fmt_write(&mut output));
     // Strip the trailing newline if present since the logger will add
     // one for us. If the input doesn't end in a newline the log
     // output will be split onto a new line anyway, which isn't
@@ -85,7 +88,14 @@ unsafe extern "C" fn snprintf(
 
     // Format into a temporary buffer.
     let mut tmp = String::new();
-    printf::format(fmt, args.as_va_list(), printf::output::fmt_write(&mut tmp));
+    // b/522737164: Need compat here with Rust <1.94 and >=1.94. Clean this up after 1.94 lands in
+    // CrOS.
+    #[cfg(cros_va_list_2_lifetimes)]
+    let va_list = args.as_va_list();
+    #[cfg(not(cros_va_list_2_lifetimes))]
+    let va_list = args;
+
+    printf::format(fmt, va_list, printf::output::fmt_write(&mut tmp));
 
     // Convert the formatted output to a slice of `c_char`.
     let formatted_bytes = tmp.as_bytes();
