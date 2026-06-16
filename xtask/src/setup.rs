@@ -14,11 +14,11 @@ use command_run::Command;
 use tempfile::TempDir;
 
 /// Bump this version any time the setup step needs to be re-run.
-const SETUP_VERSION: u32 = 20;
+const SETUP_VERSION: u32 = 21;
 
 const VBOOT_REFERENCE_REPO: &str =
     "https://chromium.googlesource.com/chromiumos/platform/vboot_reference";
-const VBOOT_REFERENCE_REV: &str = "6c242361a8675019435cebf7d45e78ae6163269a";
+const VBOOT_REFERENCE_REV: &str = "906136da2c93e6dfe3c93763c93dfae59d24e54d";
 
 const CHROMEOS_IMAGE_ARCHIVE_BUCKET: &str = "chromeos-image-archive";
 const CHROMEOS_LOCALMIRROR_BUCKET: &str = "chromeos-localmirror";
