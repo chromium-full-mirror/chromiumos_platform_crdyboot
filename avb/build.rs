@@ -119,7 +119,6 @@ fn gen_avblib_bindings(include_dirs: &[PathBuf], target: Target) {
 }
 
 fn main() {
-    println!("cargo:rustc-check-cfg=cfg(cros_va_list_2_lifetimes)");
     let c_compiler = env::var("CC").unwrap_or_else(|_| "clang".to_owned());
 
     let avb_ref = Path::new("../third_party/avb");
@@ -137,43 +136,4 @@ fn main() {
     build_avb_lib(avb_ref, target, &c_compiler);
 
     gen_avblib_bindings(&include_dirs, target);
-
-    // b/522737164: Need compat here with Rust <1.94 and >=1.94. Clean this up after 1.94 lands in
-    // CrOS.
-    // Test if VaList has 2 lifetimes.
-    let rustc = env::var_os("RUSTC").unwrap_or_else(|| "rustc".into());
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let test_code = r#"
-        #![no_std]
-        #![feature(c_variadic)]
-        use core::ffi::VaList;
-        fn test<'a, 'b>(args: VaList<'a, 'b>) {}
-        fn main() {}
-    "#;
-
-    let mut cmd = std::process::Command::new(rustc);
-    cmd.arg("--crate-type=lib");
-    cmd.arg(format!("--out-dir={}", out_dir));
-    cmd.arg("-");
-
-    let mut child = cmd
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn()
-        .expect("failed to execute rustc");
-
-    {
-        use std::io::Write;
-        let mut stdin = child.stdin.take().expect("failed to open stdin");
-        stdin
-            .write_all(test_code.as_bytes())
-            .expect("failed to write to stdin");
-    }
-
-    let status = child.wait().expect("failed to wait for rustc");
-
-    if status.success() {
-        println!("cargo:rustc-cfg=cros_va_list_2_lifetimes");
-    }
 }
