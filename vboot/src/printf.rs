@@ -32,7 +32,7 @@ unsafe fn str_from_c_str<'a>(s: *const c_char) -> Cow<'a, str> {
 /// Write a printf-style message to the log at the info level. Called
 /// by `vboot_reference` for printing.
 #[no_mangle]
-unsafe extern "C" fn vb2ex_printf(func: *const c_char, fmt: *const c_char, mut args: ...) {
+unsafe extern "C" fn vb2ex_printf(func: *const c_char, fmt: *const c_char, args: ...) {
     let func = str_from_c_str(func);
 
     let mut output = String::new();
@@ -78,7 +78,7 @@ unsafe extern "C" fn snprintf(
     buffer: *mut c_char,
     bufsz: c_size_t,
     fmt: *const c_char,
-    mut args: ...
+    args: ...
 ) -> c_int {
     if buffer.is_null() || fmt.is_null() || bufsz == 0 {
         return 0;

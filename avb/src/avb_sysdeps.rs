@@ -137,7 +137,7 @@ fn split_avb_log_line(full_log: &str) -> (Option<&str>, Option<u32>, &str) {
 }
 
 #[no_mangle]
-unsafe extern "C" fn avb_printf(fmt: *const c_char, mut args: ...) {
+unsafe extern "C" fn avb_printf(fmt: *const c_char, args: ...) {
     // Used when AVB_USE_PRINTF_LOGS is defined.
     // AVB_USE_PRINTF_LOGS is defined in build.rs.
     let mut full = String::new();
